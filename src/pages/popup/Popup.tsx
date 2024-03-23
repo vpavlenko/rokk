@@ -37,6 +37,7 @@ const Popup = () => {
           Toggle theme
         </button>
       </header>
+      Wow, such rokk!
     </div>
   );
 };
