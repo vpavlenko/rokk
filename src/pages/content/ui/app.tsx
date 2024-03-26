@@ -13,6 +13,11 @@ export default function App() {
     const artist = document.querySelector('span[itemprop="byArtist"]') as HTMLSpanElement;
 
     artist && chordStorage.addAuthor(artist.innerText);
+
+    chrome.runtime.sendMessage({
+      action: 'chordsOnCurrentPage',
+      data: Array.from(document.querySelectorAll('.podbor__chord')).map(el => el.getAttribute('data-chord')),
+    });
   }, []);
 
   return <div className="rokk_content_view">content view</div>;

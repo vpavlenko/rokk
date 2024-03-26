@@ -47,6 +47,7 @@ const SidePanel = () => {
   const [youtubeVideo, setYoutubeVideo] = useState<string | null>(null);
   const chords = useStorage(chordStorage);
   const [searchResults, setSearchResults] = useState<SearchResultItemProps[]>([]);
+  const [chordsOnCurrentPage, setChordsOnCurrentPage] = useState<string[]>([]);
 
   useEffect(() => {
     const guitar = new GuitarAcousticMp3({
@@ -64,6 +65,22 @@ const SidePanel = () => {
       }
     };
   }, []);
+
+  useEffect(() => {
+    // Function to handle incoming messages
+    const handleMessage = (request, sender, sendResponse) => {
+      if (request.action === 'chordsOnCurrentPage') {
+        // Update state with the extracted data
+        setChordsOnCurrentPage(request.data);
+      }
+    };
+
+    // Add message listener when the component mounts
+    chrome.runtime.onMessage.addListener(handleMessage);
+
+    // Cleanup: remove the listener when the component unmounts
+    return () => chrome.runtime.onMessage.removeListener(handleMessage);
+  }, []); // Empty dependency array means this effect runs once on mount
 
   const playChord = chordSymbol => {
     const midiPitches = getChordMidiPitches(chordSymbol);
@@ -117,7 +134,7 @@ const SidePanel = () => {
   }, []);
 
   return (
-    <div>
+    <div style={{ width: '100vw' }}>
       <div>
         {/* UI elements like buttons can go here. Use event handlers to trigger instrument actions. */}
         <button onClick={() => playChord('Am')}>Am</button>
@@ -156,6 +173,15 @@ const SidePanel = () => {
             </button>
           ))
         )}
+      </div>
+      <div>
+        {chordsOnCurrentPage.map((chord, index) => (
+          <>
+            <div key={index} style={{ marginRight: 20, display: 'inline-block' }}>
+              {chord}
+            </div>
+          </>
+        ))}
       </div>
       <div>{JSON.stringify(chords)}</div>
     </div>
