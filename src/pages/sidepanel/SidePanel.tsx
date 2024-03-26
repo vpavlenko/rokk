@@ -1,42 +1,57 @@
-import React from 'react';
-import logo from '@assets/img/logo.svg';
+import React, { useEffect, useState } from 'react';
 import '@pages/sidepanel/SidePanel.css';
-import useStorage from '@src/shared/hooks/useStorage';
-import exampleThemeStorage from '@src/shared/storages/exampleThemeStorage';
 import withSuspense from '@src/shared/hoc/withSuspense';
 import withErrorBoundary from '@src/shared/hoc/withErrorBoundary';
+import * as Tone from 'tone';
+import GuitarAcousticMp3 from 'tonejs-instrument-guitar-acoustic-mp3';
 
 const SidePanel = () => {
-  const theme = useStorage(exampleThemeStorage);
+  const [instrument, setInstrument] = useState(null);
+
+  useEffect(() => {
+    const guitar = new GuitarAcousticMp3({
+      onload: async () => {
+        await Tone.start();
+        guitar.toDestination();
+        setInstrument(guitar); // Instrument is ready
+      },
+    });
+
+    // Cleanup function to stop and dispose the instrument when the component unmounts
+    return () => {
+      if (instrument) {
+        instrument.dispose();
+      }
+    };
+  }, []);
+
+  const playAmChord = () => {
+    if (instrument) {
+      const notes = ['A2', 'E3', 'A3', 'C4', 'E4']; // Notes of the Am chord in a common voicing
+      const startTime = Tone.now();
+      const strumDuration = 0.03; // Duration between each note in the strum
+      const chordDuration = 1; // Time in seconds to let the chord ring
+
+      // Triggering the attack of each note in sequence for the strumming effect
+      notes.forEach((note, index) => {
+        instrument.triggerAttack(note, startTime + index * strumDuration);
+      });
+
+      // Schedule all notes to be stopped after the chordDuration
+      setTimeout(() => {
+        notes.forEach(note => {
+          instrument.triggerRelease(note);
+        });
+      }, chordDuration * 1000); // Convert seconds to milliseconds
+    } else {
+      console.log('Instrument not ready');
+    }
+  };
 
   return (
-    <div
-      className="App"
-      style={{
-        backgroundColor: theme === 'light' ? '#fff' : '#000',
-      }}>
-      <header className="App-header" style={{ color: theme === 'light' ? '#000' : '#fff' }}>
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/pages/sidepanel/SidePanel.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ color: theme === 'light' && '#0281dc', marginBottom: '10px' }}>
-          Learn React!
-        </a>
-        <button
-          style={{
-            backgroundColor: theme === 'light' ? '#fff' : '#000',
-            color: theme === 'light' ? '#000' : '#fff',
-          }}
-          onClick={exampleThemeStorage.toggle}>
-          Toggle theme
-        </button>
-      </header>
+    <div>
+      {/* UI elements like buttons can go here. Use event handlers to trigger instrument actions. */}
+      <button onClick={playAmChord}>Play Am</button>
     </div>
   );
 };
