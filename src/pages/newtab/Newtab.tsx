@@ -6,9 +6,11 @@ import useStorage from '@src/shared/hooks/useStorage';
 import exampleThemeStorage from '@src/shared/storages/exampleThemeStorage';
 import withSuspense from '@src/shared/hoc/withSuspense';
 import withErrorBoundary from '@src/shared/hoc/withErrorBoundary';
+import chordStorage from '@root/src/shared/storages/chordStorage';
 
 const Newtab = () => {
   const theme = useStorage(exampleThemeStorage);
+  const chords = useStorage(chordStorage);
 
   return (
     <div
@@ -36,7 +38,7 @@ const Newtab = () => {
             color: theme === 'light' ? '#000' : '#fff',
           }}
           onClick={exampleThemeStorage.toggle}>
-          PWND! Yay
+          {JSON.stringify(chords)}
         </button>
       </header>
     </div>
