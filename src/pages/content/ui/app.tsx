@@ -12,7 +12,7 @@ export default function App() {
 
     const artist = document.querySelector('span[itemprop="byArtist"]') as HTMLSpanElement;
 
-    chordStorage.addAuthor(artist.innerText);
+    artist && chordStorage.addAuthor(artist.innerText);
   }, []);
 
   return <div className="rokk_content_view">content view</div>;

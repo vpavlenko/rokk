@@ -1,10 +1,16 @@
+/* eslint-disable no-debugger */
 import React, { useEffect, useState } from 'react';
 import '@pages/sidepanel/SidePanel.css';
 import withSuspense from '@src/shared/hoc/withSuspense';
 import withErrorBoundary from '@src/shared/hoc/withErrorBoundary';
 import * as Tone from 'tone';
 import GuitarAcousticMp3 from 'tonejs-instrument-guitar-acoustic-mp3';
-import guitarChords, { ChordPosition } from './guitarChords';
+import guitarChords from './guitarChords';
+import chordStorage from '@root/src/shared/storages/chordStorage';
+import useStorage from '@root/src/shared/hooks/useStorage';
+import SearchResultItem, { SearchResultItemProps } from './Youtube';
+
+const YOUTUBE_API_KEY = localStorage.getItem('YOUTUBE_API_KEY');
 
 function parseChordSymbol(chordSymbol: string): [string, string] {
   const root = chordSymbol[0]; // Assuming single-letter root notes for simplicity
@@ -38,6 +44,9 @@ let releaseTimeoutId: NodeJS.Timeout | null = null; // Track the active timeout 
 
 const SidePanel = () => {
   const [instrument, setInstrument] = useState(null);
+  const [youtubeVideo, setYoutubeVideo] = useState<string | null>(null);
+  const chords = useStorage(chordStorage);
+  const [searchResults, setSearchResults] = useState<SearchResultItemProps[]>([]);
 
   useEffect(() => {
     const guitar = new GuitarAcousticMp3({
@@ -71,7 +80,7 @@ const SidePanel = () => {
       });
 
       const startTime = Tone.now();
-      const strumDuration = 0.03;
+      const strumDuration = 0.01;
       const frequencies = midiPitches.map(pitch => Tone.Midi(pitch).toFrequency());
 
       // Update the currently playing notes
@@ -94,12 +103,61 @@ const SidePanel = () => {
     }
   };
 
+  const query = 'король и шут кукла колдуна';
+
+  useEffect(() => {
+    const search = async () => {
+      const response = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&key=${YOUTUBE_API_KEY}`,
+      );
+      const data = await response.json();
+      setSearchResults(data.items);
+    };
+    search();
+  }, []);
+
   return (
     <div>
-      {/* UI elements like buttons can go here. Use event handlers to trigger instrument actions. */}
-      <button onClick={() => playChord('Am')}>Play Am</button>
-      <button onClick={() => playChord('Dm')}>Play Dm</button>
-      <button onClick={() => playChord('E7')}>Play E7</button>
+      <div>
+        {/* UI elements like buttons can go here. Use event handlers to trigger instrument actions. */}
+        <button onClick={() => playChord('Am')}>Am</button>
+        <button onClick={() => playChord('Dm')}>Dm</button>
+        <button onClick={() => playChord('F')}>F</button>
+        <button onClick={() => playChord('G')}>G</button>
+        <button onClick={() => playChord('C')}>C</button>
+        <button onClick={() => playChord('A7')}>A7</button>
+        <button onClick={() => playChord('Gm')}>Gm</button>
+        <button onClick={() => playChord('B7')}>B7</button>
+        <button onClick={() => playChord('D')}>D</button>
+        <button onClick={() => playChord('E7')}>E7</button>
+      </div>
+      <div>
+        {youtubeVideo ? (
+          <div>
+            <div>{youtubeVideo}</div>
+            <iframe
+              title="youtube"
+              id="youtube-player"
+              width="560"
+              height="315"
+              src={`https://www.youtube.com/embed/${youtubeVideo}`}
+              allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"></iframe>
+          </div>
+        ) : (
+          searchResults.map((result, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                debugger;
+                setYoutubeVideo(result.id.videoId);
+              }}
+              style={{ cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>
+              <SearchResultItem result={result} />
+            </button>
+          ))
+        )}
+      </div>
+      <div>{JSON.stringify(chords)}</div>
     </div>
   );
 };
