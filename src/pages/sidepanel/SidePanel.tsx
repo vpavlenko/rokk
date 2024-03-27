@@ -5,14 +5,7 @@ import withErrorBoundary from '@src/shared/hoc/withErrorBoundary';
 import chordStorage from '@root/src/shared/storages/chordStorage';
 import useStorage from '@root/src/shared/hooks/useStorage';
 import SearchResultItem, { SearchResultItemProps } from './Youtube';
-import {
-  HoverChordData,
-  MESSAGE_HOVER_CHORD,
-  MESSAGE_SONG_OPENED,
-  MESSAGE_TRANSPOSED,
-  SongOpenedData,
-  TransposedData,
-} from '@root/src/shared/messages';
+import { MESSAGE_HOVER_CHORD, MESSAGE_PAGE_DATA, Message } from '@root/src/shared/messages';
 import ChordPlayer, { playChord } from './ChordPlayer';
 import { PROCESSING_STEPS, processChords } from './chordProcessing';
 
@@ -34,6 +27,7 @@ const SidePanel = () => {
   const [artist, setArtist] = useState<string | null>(null);
   const [song, setSong] = useState<string | null>(null);
   const [url, setUrl] = useState<string | null>(null);
+  const [chordsBlock, setChordsBlock] = useState<string>('');
   const [youtubeVideo, setYoutubeVideo] = useState<string | null>(null);
   const [transposition, setTransposition] = useState<number>(0);
   const chordsDB = useStorage(chordStorage);
@@ -42,21 +36,18 @@ const SidePanel = () => {
   const [processedChords, setProcessedChords] = useState<string[]>([]);
 
   useEffect(() => {
-    const handleMessage = (request, sender: chrome.runtime.MessageSender) => {
-      if (request.action === MESSAGE_SONG_OPENED) {
-        const { artist, song, chords } = request.data as SongOpenedData;
+    const handleMessage = (request: Message, sender: chrome.runtime.MessageSender) => {
+      if (request.action === MESSAGE_PAGE_DATA) {
+        const { artist, song, chordsBlock, chords } = request.data;
         setChordsOnCurrentPage(chords);
         setArtist(artist);
         setSong(song);
+        setChordsBlock(chordsBlock);
         setUrl(sender.url);
-      }
-      if (request.action === MESSAGE_TRANSPOSED) {
-        const { chords, transposition } = request.data as TransposedData;
-        setChordsOnCurrentPage(chords);
         setTransposition(transposition);
       }
       if (request.action === MESSAGE_HOVER_CHORD) {
-        const { chord } = request.data as HoverChordData;
+        const { chord } = request.data;
         playChord(chord, transposition);
       }
     };
@@ -114,6 +105,18 @@ const SidePanel = () => {
             </button>
           ))
         )}
+      </div>
+      <div>
+        innerHTML:{' '}
+        <ul>
+          {chordsBlock
+            .split(/\n/g)
+            .map(line => [...line.matchAll(/data-chord="([^"]+)"/g)].map(match => match[1]))
+            .filter(chords => chords.length > 0)
+            .map((chords, index) => (
+              <li key={index}>{chords.join(' ')}</li>
+            ))}
+        </ul>
       </div>
       <ChordSequence chords={chordsOnCurrentPage} />
       <div style={{ margin: '20px 0' }}>

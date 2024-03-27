@@ -1,16 +1,19 @@
 // TODO: type properly
 // https://chat.openai.com/share/9b6bbf5a-639d-4bd3-8026-b5d604596888
 
-export const MESSAGE_SONG_OPENED = 'songOpened';
-export const MESSAGE_TRANSPOSED = 'transposed';
+export const MESSAGE_PAGE_DATA = 'pageData';
 export const MESSAGE_HOVER_CHORD = 'hoverChord';
 
-export type SongOpenedData = {
+export type PageData = {
   artist: string;
   song: string;
+  chordsBlock: string;
   chords: string[];
+  transposition: number;
 };
 
-export type TransposedData = { chords: string[]; transposition: number };
-
 export type HoverChordData = { chord: string };
+
+export type Message =
+  | { action: typeof MESSAGE_PAGE_DATA; data: PageData }
+  | { action: typeof MESSAGE_HOVER_CHORD; data: HoverChordData };
