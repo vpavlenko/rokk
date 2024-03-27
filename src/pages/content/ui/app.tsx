@@ -1,3 +1,4 @@
+import { MESSAGE_SONG_OPENED } from '@root/src/shared/messages';
 import chordStorage from '@root/src/shared/storages/chordStorage';
 import { useEffect } from 'react';
 
@@ -10,13 +11,18 @@ export default function App() {
     // const transposeDown = document.querySelector('.btn[value="-1"]') as HTMLButtonElement;
     // setTimeout(() => transposeDown.click(), 2000);
 
-    const artist = document.querySelector('span[itemprop="byArtist"]') as HTMLSpanElement;
+    const artist = (document.querySelector('span[itemprop="byArtist"]') as HTMLSpanElement)?.innerText;
+    const song = (document.querySelector('span[itemprop="name"]') as HTMLSpanElement)?.innerText;
 
-    artist && chordStorage.addAuthor(artist.innerText);
+    artist && chordStorage.addAuthor(artist);
 
     chrome.runtime.sendMessage({
-      action: 'chordsOnCurrentPage',
-      data: Array.from(document.querySelectorAll('.podbor__chord')).map(el => el.getAttribute('data-chord')),
+      action: MESSAGE_SONG_OPENED,
+      data: {
+        artist,
+        song,
+        chords: Array.from(document.querySelectorAll('.podbor__chord')).map(el => el.getAttribute('data-chord')),
+      },
     });
   }, []);
 

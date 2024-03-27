@@ -75,7 +75,7 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "prettier --write",
-      "eslint --fix"
+      "eslint --fix --config .eslintrc.commit.json"
     ]
   },
   "packageManager": "pnpm@8.9.2"
