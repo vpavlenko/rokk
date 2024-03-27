@@ -1,6 +1,16 @@
-import { createStorage, StorageType } from '@src/shared/storages/base';
+import { BaseStorage, createStorage, StorageType } from '@src/shared/storages/base';
 
-const storage = createStorage<{ [key: string]: number }>(
+type ArtistSongChords = {
+  [artist: string]: {
+    [song: string]: { url: string; chords: string[] };
+  };
+};
+
+type ChordStorage = BaseStorage<ArtistSongChords> & {
+  addChords: (artist: string, song: string, url: string, chords: string[]) => Promise<void>;
+};
+
+const storage = createStorage<ArtistSongChords>(
   'chord-storage-key',
   {},
   {
@@ -9,10 +19,21 @@ const storage = createStorage<{ [key: string]: number }>(
   },
 );
 
-const chordStorage = {
+const chordStorage: ChordStorage = {
   ...storage,
-  addAuthor: async author => {
-    await storage.set(authors => ({ ...authors, [author]: 42 }));
+  addChords: async (artist: string, song: string, url: string, chords: string[]) => {
+    artist = artist.toLowerCase();
+    song = song.toLowerCase();
+
+    const artists: ArtistSongChords = (await storage.get()) || {};
+
+    if (!artists[artist]) {
+      artists[artist] = {};
+    }
+
+    artists[artist][song] = { url, chords };
+
+    return storage.set(artists);
   },
 };
 

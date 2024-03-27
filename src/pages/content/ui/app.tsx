@@ -1,5 +1,4 @@
 import { MESSAGE_HOVER_CHORD, MESSAGE_PAGE_DATA, Message } from '@root/src/shared/messages';
-import chordStorage from '@root/src/shared/storages/chordStorage';
 import { useEffect } from 'react';
 
 const attachHoverHandlers = () => {
@@ -54,8 +53,6 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    // artist && chordStorage.addAuthor(artist);
-
     sendPageData();
   }, []);
 

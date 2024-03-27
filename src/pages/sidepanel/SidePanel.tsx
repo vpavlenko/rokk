@@ -30,7 +30,6 @@ const SidePanel = () => {
   const [chordsBlock, setChordsBlock] = useState<string>('');
   const [youtubeVideo, setYoutubeVideo] = useState<string | null>(null);
   const [transposition, setTransposition] = useState<number>(0);
-  const chordsDB = useStorage(chordStorage);
   const [searchResults, setSearchResults] = useState<SearchResultItemProps[]>([]);
   const [chordsOnCurrentPage, setChordsOnCurrentPage] = useState<string[]>([]);
   const [processedChords, setProcessedChords] = useState<string[]>([]);
@@ -118,6 +117,9 @@ const SidePanel = () => {
             ))}
         </ul>
       </div>
+      <div>
+        <button onClick={() => chordStorage.addChords(artist, song, url, chordsOnCurrentPage)}>Save</button>
+      </div>
       <ChordSequence chords={chordsOnCurrentPage} />
       <div style={{ margin: '20px 0' }}>
         Processing steps:
@@ -135,7 +137,7 @@ const SidePanel = () => {
         {url}
       </div>
 
-      <div style={{ marginTop: 30 }}>storage: {JSON.stringify(chordsDB)}</div>
+      {/* <div style={{ marginTop: 30 }}>storage: {JSON.stringify(chordsDB)}</div> */}
     </div>
   );
 };
