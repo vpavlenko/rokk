@@ -18,12 +18,24 @@ function parseChordSymbol(chordSymbol: string): [string, string] {
   return [root, quality];
 }
 
-function getChordMidiPitches(chordSymbol: string): number[] | undefined {
+function applyTransposition(root: string, transposition: number): string {
+  const rootIndex = guitarChords.keys.indexOf(root);
+
+  if (rootIndex === -1) {
+    throw new Error('Root note not found in KEYS array');
+  }
+
+  return guitarChords.keys[(rootIndex + 12 - transposition) % 12];
+}
+
+function getChordMidiPitches(chordSymbol: string, transposition: number): number[] | undefined {
   // Split the chord symbol into its components (e.g., 'Am' -> ['A', 'minor'])
-  const [root, suffix] = parseChordSymbol(chordSymbol);
+  // eslint-disable-next-line prefer-const
+  let [root, suffix] = parseChordSymbol(chordSymbol);
+  root = applyTransposition(root, transposition);
 
   // Find the chord variations for the given root and suffix
-  const variations = guitarChords.chords[root]?.find(variant => variant.suffix === suffix);
+  const variations = guitarChords.chords[root.replace('#', 'sharp')]?.find(variant => variant.suffix === suffix);
 
   // Return the MIDI pitches for the first variation found, for simplicity
   return variations?.positions[0]?.midi;
@@ -42,8 +54,8 @@ const guitar = new GuitarAcousticMp3({
   },
 });
 
-const playChord = chordSymbol => {
-  const midiPitches = getChordMidiPitches(chordSymbol);
+const playChord = (chordSymbol, transposition) => {
+  const midiPitches = getChordMidiPitches(chordSymbol, transposition);
   if (midiPitches && instrument) {
     // Clear the previous timeout to prevent it from stopping the current notes
     if (releaseTimeoutId) {
@@ -79,18 +91,30 @@ const playChord = chordSymbol => {
   }
 };
 
-export const PlayableChord: React.FC<{ chord: string; isEnabled: boolean }> = ({ chord, isEnabled }) => (
-  <button style={{ backgroundColor: isEnabled ? '#dfd' : '#999' }} onClick={() => playChord(chord)}>
+export const PlayableChord: React.FC<{ chord: string; isEnabled: boolean; transposition: number }> = ({
+  chord,
+  isEnabled,
+  transposition,
+}) => (
+  <button style={{ backgroundColor: isEnabled ? '#dfd' : '#999' }} onClick={() => playChord(chord, transposition)}>
     {chord}
   </button>
 );
 
-const CHORDS_TO_PLAY = ['Am', 'Dm', 'F', 'G', 'C', 'A7', 'Gm', 'B7', 'D', 'E7'];
+const CHORDS_TO_PLAY = ['Am', 'E', 'E7', 'Dm', 'F', 'G', 'C', 'A7', 'B7', 'D', 'Gm'];
 
-const ChordPlayer: React.FC<{ enabledChords: string[] }> = ({ enabledChords }) => (
+const ChordPlayer: React.FC<{ enabledChords: string[]; transposition: number }> = ({
+  enabledChords,
+  transposition,
+}) => (
   <div>
     {CHORDS_TO_PLAY.map((chord, index) => (
-      <PlayableChord key={index} chord={chord} isEnabled={enabledChords.indexOf(chord) !== -1} />
+      <PlayableChord
+        key={index}
+        chord={chord}
+        isEnabled={enabledChords.indexOf(chord) !== -1}
+        transposition={transposition}
+      />
     ))}
   </div>
 );

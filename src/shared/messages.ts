@@ -10,4 +10,4 @@ export type SongOpenedData = {
   chords: string[];
 };
 
-export type TransposedData = { chords: string[] };
+export type TransposedData = { chords: string[]; transposition: number };

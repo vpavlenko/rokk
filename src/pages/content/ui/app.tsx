@@ -13,6 +13,7 @@ export default function App() {
           action: MESSAGE_TRANSPOSED,
           data: {
             chords: Array.from(document.querySelectorAll('.podbor__chord')).map(el => el.getAttribute('data-chord')),
+            transposition: parseInt(document.getElementById('tone').innerText, 10) || 0,
           },
         });
       };

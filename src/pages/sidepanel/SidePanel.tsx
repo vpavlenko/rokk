@@ -28,6 +28,7 @@ const SidePanel = () => {
   const [song, setSong] = useState<string | null>(null);
   const [url, setUrl] = useState<string | null>(null);
   const [youtubeVideo, setYoutubeVideo] = useState<string | null>(null);
+  const [transposition, setTransposition] = useState<number>(0);
   const chordsDB = useStorage(chordStorage);
   const [searchResults, setSearchResults] = useState<SearchResultItemProps[]>([]);
   const [chordsOnCurrentPage, setChordsOnCurrentPage] = useState<string[]>([]);
@@ -43,8 +44,9 @@ const SidePanel = () => {
         setUrl(sender.url);
       }
       if (request.action === MESSAGE_TRANSPOSED) {
-        const { chords } = request.data as TransposedData;
+        const { chords, transposition } = request.data as TransposedData;
         setChordsOnCurrentPage(chords);
+        setTransposition(transposition);
       }
     };
 
@@ -73,8 +75,9 @@ const SidePanel = () => {
   return (
     <div style={{ width: '100vw' }}>
       <div>
-        <ChordPlayer enabledChords={processedChords} />
+        <ChordPlayer enabledChords={processedChords} transposition={transposition} />
       </div>
+      <div>transposition: {transposition}</div>
       <div>
         <button onClick={() => setYoutubeVideo(null)}>Close</button>
       </div>
