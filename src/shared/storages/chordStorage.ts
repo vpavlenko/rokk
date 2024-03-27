@@ -1,9 +1,11 @@
 import { BaseStorage, createStorage, StorageType } from '@src/shared/storages/base';
 
+type SongList = {
+  [song: string]: { url: string; chords: string[]; transposition: number; hasModulation: boolean };
+};
+
 type ArtistSongChords = {
-  [artist: string]: {
-    [song: string]: { url: string; chords: string[]; transposition: number; hasModulation: boolean };
-  };
+  [artist: string]: SongList;
 };
 
 type ChordStorage = BaseStorage<ArtistSongChords> & {
@@ -16,6 +18,7 @@ type ChordStorage = BaseStorage<ArtistSongChords> & {
     hasModulation: boolean,
   ) => Promise<void>;
   getSavedTransposition: (artist: string, song: string) => Promise<number>;
+  getArtist: (artist: string) => Promise<SongList>;
 };
 
 const storage = createStorage<ArtistSongChords>(
@@ -50,6 +53,13 @@ const chordStorage: ChordStorage = {
     const artists: ArtistSongChords = (await storage.get()) || {};
 
     return artists[artist]?.[song]?.transposition ?? 0;
+  },
+  getArtist: async artist => {
+    artist = artist.toLowerCase();
+
+    const artists: ArtistSongChords = (await storage.get()) || {};
+
+    return artists[artist];
   },
 };
 

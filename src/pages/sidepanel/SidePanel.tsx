@@ -88,6 +88,11 @@ const SidePanel = () => {
         <button onClick={() => setYoutubeVideo(null)}>Close</button>
       </div>
       <div>
+        <a href={`https://www.youtube.com/results?search_query=${artist} ${song}`} target="_blank" rel="noreferrer">
+          Search Youtube
+        </a>
+      </div>
+      <div>
         {youtubeVideo ? (
           <div>
             <iframe

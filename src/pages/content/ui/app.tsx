@@ -26,7 +26,7 @@ const getPageData = (): PageData => ({
   song: (document.querySelector('span[itemprop="name"]') as HTMLSpanElement)?.innerText,
   chordsBlock: (document.querySelector('[itemprop="chordsBlock"]') as HTMLPreElement)?.innerHTML,
   chords: Array.from(document.querySelectorAll('.podbor__chord')).map(el => el.getAttribute('data-chord')),
-  transposition: parseInt(document.getElementById('tone').innerText, 10) || 0,
+  transposition: parseInt(document.getElementById('tone')?.innerText, 10) || 0,
 });
 
 const sendPageData = () =>
@@ -37,9 +37,21 @@ const sendPageData = () =>
 
 const { artist, song } = getPageData();
 
+const enhanceArtistPage = async () => {
+  const artist = (document.querySelector('.artist-profile__info h1') as HTMLHeadingElement)?.innerText;
+  if (!artist) return;
+  const songs = await chordStorage.getArtist(artist);
+  document.querySelectorAll('.g-link').forEach((a: HTMLLinkElement) => {
+    if (songs[a.innerText.toLowerCase()]) {
+      a.style.setProperty('background-color', '#dfd');
+    }
+  });
+};
+
 export default function App() {
   useEffect(() => {
     const fetchTransposition = async () => {
+      if (!artist || !song) return;
       const savedTransposition = await chordStorage.getSavedTransposition(artist, song);
       if (savedTransposition !== 0) {
         (document.querySelector('#form_transpon input[name="tone"]') as HTMLInputElement).value = (
@@ -48,12 +60,7 @@ export default function App() {
         (document.querySelector('button[value="-1"]') as HTMLButtonElement).click();
       }
     };
-    fetchTransposition();
-  }, []);
 
-  useEffect(() => attachHoverHandlers(), []);
-
-  useEffect(() => {
     const targetNode = document.querySelector('.b-podbor__text') as HTMLPreElement;
     if (targetNode) {
       const config = { childList: true, subtree: true, characterData: true };
@@ -68,10 +75,11 @@ export default function App() {
 
       return () => observer.disconnect();
     }
-  }, []);
 
-  useEffect(() => {
+    fetchTransposition();
+    attachHoverHandlers();
     sendPageData();
+    enhanceArtistPage();
   }, []);
 
   return <div className="rokk_content_view">content view</div>;
