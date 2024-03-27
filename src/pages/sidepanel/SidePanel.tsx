@@ -5,26 +5,46 @@ import withErrorBoundary from '@src/shared/hoc/withErrorBoundary';
 import chordStorage from '@root/src/shared/storages/chordStorage';
 import useStorage from '@root/src/shared/hooks/useStorage';
 import SearchResultItem, { SearchResultItemProps } from './Youtube';
-import { MESSAGE_SONG_OPENED, SongOpenedData } from '@root/src/shared/messages';
+import { MESSAGE_SONG_OPENED, MESSAGE_TRANSPOSED, SongOpenedData, TransposedData } from '@root/src/shared/messages';
 import ChordPlayer from './ChordPlayer';
+import { PROCESSING_STEPS, processChords } from './chordProcessing';
 
 const YOUTUBE_API_KEY = localStorage.getItem('YOUTUBE_API_KEY');
+
+const ChordSequence: React.FC<{ chords: string[] }> = ({ chords }) => (
+  <div>
+    {chords.map((chord, index) => (
+      <>
+        <div key={index} style={{ marginRight: 20, display: 'inline-block' }}>
+          {chord}
+        </div>
+      </>
+    ))}
+  </div>
+);
 
 const SidePanel = () => {
   const [artist, setArtist] = useState<string | null>(null);
   const [song, setSong] = useState<string | null>(null);
+  const [url, setUrl] = useState<string | null>(null);
   const [youtubeVideo, setYoutubeVideo] = useState<string | null>(null);
-  const chords = useStorage(chordStorage);
+  const chordsDB = useStorage(chordStorage);
   const [searchResults, setSearchResults] = useState<SearchResultItemProps[]>([]);
   const [chordsOnCurrentPage, setChordsOnCurrentPage] = useState<string[]>([]);
+  const [processedChords, setProcessedChords] = useState<string[]>([]);
 
   useEffect(() => {
-    const handleMessage = request => {
+    const handleMessage = (request, sender: chrome.runtime.MessageSender) => {
       if (request.action === MESSAGE_SONG_OPENED) {
         const { artist, song, chords } = request.data as SongOpenedData;
         setChordsOnCurrentPage(chords);
         setArtist(artist);
         setSong(song);
+        setUrl(sender.url);
+      }
+      if (request.action === MESSAGE_TRANSPOSED) {
+        const { chords } = request.data as TransposedData;
+        setChordsOnCurrentPage(chords);
       }
     };
 
@@ -48,10 +68,12 @@ const SidePanel = () => {
     search();
   }, [artist, song]);
 
+  useEffect(() => setProcessedChords(processChords(chordsOnCurrentPage)), [chordsOnCurrentPage]);
+
   return (
     <div style={{ width: '100vw' }}>
       <div>
-        <ChordPlayer />
+        <ChordPlayer enabledChords={processedChords} />
       </div>
       <div>
         <button onClick={() => setYoutubeVideo(null)}>Close</button>
@@ -64,7 +86,7 @@ const SidePanel = () => {
               id="youtube-player"
               width="300"
               height="200"
-              src={`https://www.youtube.com/embed/${youtubeVideo}`}
+              src={`https://www.youtube.com/embed/${youtubeVideo}?rel=0`}
               allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
             />
           </div>
@@ -79,21 +101,24 @@ const SidePanel = () => {
           ))
         )}
       </div>
+      <ChordSequence chords={chordsOnCurrentPage} />
+      <div style={{ margin: '20px 0' }}>
+        Processing steps:
+        <ul>
+          {PROCESSING_STEPS.map(({ name }) => (
+            <li key={name}>{name}</li>
+          ))}
+        </ul>
+      </div>
+      <ChordSequence chords={processedChords} />
       <div>
         <h3>
           {artist} - {song}
         </h3>
+        {url}
       </div>
-      <div>
-        {chordsOnCurrentPage.map((chord, index) => (
-          <>
-            <div key={index} style={{ marginRight: 20, display: 'inline-block' }}>
-              {chord}
-            </div>
-          </>
-        ))}
-      </div>
-      <div style={{ marginTop: 30 }}>storage: {JSON.stringify(chords)}</div>
+
+      <div style={{ marginTop: 30 }}>storage: {JSON.stringify(chordsDB)}</div>
     </div>
   );
 };

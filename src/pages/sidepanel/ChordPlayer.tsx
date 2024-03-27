@@ -79,16 +79,18 @@ const playChord = chordSymbol => {
   }
 };
 
-export const PlayableChord: React.FC<{ chord: string }> = ({ chord }) => (
-  <button onClick={() => playChord(chord)}>{chord}</button>
+export const PlayableChord: React.FC<{ chord: string; isEnabled: boolean }> = ({ chord, isEnabled }) => (
+  <button style={{ backgroundColor: isEnabled ? '#dfd' : '#999' }} onClick={() => playChord(chord)}>
+    {chord}
+  </button>
 );
 
-const CHORDS_TO_PLAY = ['Am', 'Am7', 'Dm', 'F', 'G', 'C', 'A7', 'Gm', 'B7', 'D', 'E7'];
+const CHORDS_TO_PLAY = ['Am', 'Dm', 'F', 'G', 'C', 'A7', 'Gm', 'B7', 'D', 'E7'];
 
-const ChordPlayer: React.FC = () => (
+const ChordPlayer: React.FC<{ enabledChords: string[] }> = ({ enabledChords }) => (
   <div>
     {CHORDS_TO_PLAY.map((chord, index) => (
-      <PlayableChord key={index} chord={chord} />
+      <PlayableChord key={index} chord={chord} isEnabled={enabledChords.indexOf(chord) !== -1} />
     ))}
   </div>
 );
