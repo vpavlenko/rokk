@@ -14,9 +14,10 @@ const Newtab = () => {
       {Object.entries(chords).map(([artist, songs]) => (
         <div key={artist}>
           <h3>{artist}</h3>
-          {Object.entries(songs).map(([song, { url, chords, transposition }]) => (
+          {Object.entries(songs).map(([song, { url, chords, transposition, hasModulation }]) => (
             <div key={song}>
-              <a href={url}>{song}</a>: ({transposition}) {chords.join(' ')}
+              <a href={url}>{song}</a>: ({transposition}
+              {hasModulation && ', +mod'}) {chords.join(' ')}
             </div>
           ))}
         </div>

@@ -6,21 +6,21 @@ import chordStorage from '@root/src/shared/storages/chordStorage';
 import SearchResultItem, { SearchResultItemProps } from './Youtube';
 import { MESSAGE_HOVER_CHORD, MESSAGE_PAGE_DATA, Message } from '@root/src/shared/messages';
 import ChordPlayer, { playChord } from './ChordPlayer';
-import { PROCESSING_STEPS, processChords } from './chordProcessing';
+import { processChords } from './chordProcessing';
 
 const YOUTUBE_API_KEY = localStorage.getItem('YOUTUBE_API_KEY');
 
-const ChordSequence: React.FC<{ chords: string[] }> = ({ chords }) => (
-  <div>
-    {chords.map((chord, index) => (
-      <>
-        <div key={index} style={{ marginRight: 20, display: 'inline-block' }}>
-          {chord}
-        </div>
-      </>
-    ))}
-  </div>
-);
+// const ChordSequence: React.FC<{ chords: string[] }> = ({ chords }) => (
+//   <div>
+//     {chords.map((chord, index) => (
+//       <>
+//         <div key={index} style={{ marginRight: 20, display: 'inline-block' }}>
+//           {chord}
+//         </div>
+//       </>
+//     ))}
+//   </div>
+// );
 
 const SidePanel = () => {
   const [artist, setArtist] = useState<string | null>(null);
@@ -29,10 +29,11 @@ const SidePanel = () => {
   const [chordsBlock, setChordsBlock] = useState<string>('');
   const [youtubeVideo, setYoutubeVideo] = useState<string | null>(null);
   const [transposition, setTransposition] = useState<number>(0);
-  const [searchResults, setSearchResults] = useState<SearchResultItemProps[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResultItemProps[] | null>([]);
   const [chords, setChords] = useState<string[]>([]);
   const [savingResult, setSavingResult] = useState<string>('');
   const [processedChords, setProcessedChords] = useState<string[]>([]);
+  const [hasModulation, setHasModulation] = useState<boolean>(false);
 
   useEffect(() => {
     const handleMessage = (request: Message, sender: chrome.runtime.MessageSender) => {
@@ -58,6 +59,7 @@ const SidePanel = () => {
   }, [transposition]);
 
   useEffect(() => {
+    setYoutubeVideo(null);
     if (!artist || !song) {
       return;
     }
@@ -73,6 +75,8 @@ const SidePanel = () => {
   }, [artist, song]);
 
   useEffect(() => setProcessedChords(processChords(chords)), [chords]);
+
+  useEffect(() => setHasModulation(false), [song]);
 
   return (
     <div style={{ width: '100vw' }}>
@@ -96,7 +100,7 @@ const SidePanel = () => {
             />
           </div>
         ) : (
-          searchResults.map((result, index) => (
+          searchResults?.map((result, index) => (
             <button
               key={index}
               onClick={() => setYoutubeVideo(result.id.videoId)}
@@ -119,10 +123,20 @@ const SidePanel = () => {
         </ul>
       </div>
       <div>
+        <label>
+          <input
+            type="checkbox"
+            checked={hasModulation}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setHasModulation(event.target.checked)}
+          />
+          has modulation
+        </label>
+      </div>
+      <div>
         <button
           onClick={async () => {
             try {
-              await chordStorage.addChords(artist, song, url, chords, transposition);
+              await chordStorage.addChords(artist, song, url, chords, transposition, hasModulation);
               setSavingResult('saved');
               setTimeout(() => setSavingResult(''), 1000);
             } catch (e) {
@@ -134,7 +148,7 @@ const SidePanel = () => {
         </button>{' '}
         {savingResult}
       </div>
-      <ChordSequence chords={chords} />
+      {/* <ChordSequence chords={chords} />
       <div style={{ margin: '20px 0' }}>
         Processing steps:
         <ul>
@@ -143,7 +157,7 @@ const SidePanel = () => {
           ))}
         </ul>
       </div>
-      <ChordSequence chords={processedChords} />
+      <ChordSequence chords={processedChords} /> */}
       <div>
         <h3>
           {artist} - {song}
