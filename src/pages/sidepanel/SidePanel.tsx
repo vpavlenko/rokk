@@ -3,7 +3,6 @@ import '@pages/sidepanel/SidePanel.css';
 import withSuspense from '@src/shared/hoc/withSuspense';
 import withErrorBoundary from '@src/shared/hoc/withErrorBoundary';
 import chordStorage from '@root/src/shared/storages/chordStorage';
-import useStorage from '@root/src/shared/hooks/useStorage';
 import SearchResultItem, { SearchResultItemProps } from './Youtube';
 import { MESSAGE_HOVER_CHORD, MESSAGE_PAGE_DATA, Message } from '@root/src/shared/messages';
 import ChordPlayer, { playChord } from './ChordPlayer';
@@ -31,19 +30,21 @@ const SidePanel = () => {
   const [youtubeVideo, setYoutubeVideo] = useState<string | null>(null);
   const [transposition, setTransposition] = useState<number>(0);
   const [searchResults, setSearchResults] = useState<SearchResultItemProps[]>([]);
-  const [chordsOnCurrentPage, setChordsOnCurrentPage] = useState<string[]>([]);
+  const [chords, setChords] = useState<string[]>([]);
+  const [savingResult, setSavingResult] = useState<string>('');
   const [processedChords, setProcessedChords] = useState<string[]>([]);
 
   useEffect(() => {
     const handleMessage = (request: Message, sender: chrome.runtime.MessageSender) => {
       if (request.action === MESSAGE_PAGE_DATA) {
-        const { artist, song, chordsBlock, chords } = request.data;
-        setChordsOnCurrentPage(chords);
+        const { artist, song, chordsBlock, chords, transposition } = request.data;
+        setChords(chords);
         setArtist(artist);
         setSong(song);
         setChordsBlock(chordsBlock);
         setUrl(sender.url);
         setTransposition(transposition);
+        console.log('transposition', transposition);
       }
       if (request.action === MESSAGE_HOVER_CHORD) {
         const { chord } = request.data;
@@ -71,7 +72,7 @@ const SidePanel = () => {
     search();
   }, [artist, song]);
 
-  useEffect(() => setProcessedChords(processChords(chordsOnCurrentPage)), [chordsOnCurrentPage]);
+  useEffect(() => setProcessedChords(processChords(chords)), [chords]);
 
   return (
     <div style={{ width: '100vw' }}>
@@ -118,9 +119,22 @@ const SidePanel = () => {
         </ul>
       </div>
       <div>
-        <button onClick={() => chordStorage.addChords(artist, song, url, chordsOnCurrentPage)}>Save</button>
+        <button
+          onClick={async () => {
+            try {
+              await chordStorage.addChords(artist, song, url, chords, transposition);
+              setSavingResult('saved');
+              setTimeout(() => setSavingResult(''), 1000);
+            } catch (e) {
+              setSavingResult(`${e.name}: ${e.message}`);
+              throw e;
+            }
+          }}>
+          Save
+        </button>{' '}
+        {savingResult}
       </div>
-      <ChordSequence chords={chordsOnCurrentPage} />
+      <ChordSequence chords={chords} />
       <div style={{ margin: '20px 0' }}>
         Processing steps:
         <ul>
