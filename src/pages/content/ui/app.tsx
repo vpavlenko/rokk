@@ -6,12 +6,14 @@ const attachHoverHandlers = () => {
   const elements = document.querySelectorAll('.podbor__chord');
 
   const handleMouseEnter = (event: MouseEvent) => {
-    chrome.runtime.sendMessage({
-      action: MESSAGE_HOVER_CHORD,
-      data: {
-        chord: (event.target as HTMLDivElement).innerText,
-      },
-    });
+    if (!event.shiftKey) {
+      chrome.runtime.sendMessage({
+        action: MESSAGE_HOVER_CHORD,
+        data: {
+          chord: (event.target as HTMLDivElement).innerText,
+        },
+      });
+    }
   };
 
   elements.forEach(element => {
