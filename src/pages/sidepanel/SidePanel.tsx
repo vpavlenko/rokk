@@ -5,8 +5,15 @@ import withErrorBoundary from '@src/shared/hoc/withErrorBoundary';
 import chordStorage from '@root/src/shared/storages/chordStorage';
 import useStorage from '@root/src/shared/hooks/useStorage';
 import SearchResultItem, { SearchResultItemProps } from './Youtube';
-import { MESSAGE_SONG_OPENED, MESSAGE_TRANSPOSED, SongOpenedData, TransposedData } from '@root/src/shared/messages';
-import ChordPlayer from './ChordPlayer';
+import {
+  HoverChordData,
+  MESSAGE_HOVER_CHORD,
+  MESSAGE_SONG_OPENED,
+  MESSAGE_TRANSPOSED,
+  SongOpenedData,
+  TransposedData,
+} from '@root/src/shared/messages';
+import ChordPlayer, { playChord } from './ChordPlayer';
 import { PROCESSING_STEPS, processChords } from './chordProcessing';
 
 const YOUTUBE_API_KEY = localStorage.getItem('YOUTUBE_API_KEY');
@@ -48,12 +55,16 @@ const SidePanel = () => {
         setChordsOnCurrentPage(chords);
         setTransposition(transposition);
       }
+      if (request.action === MESSAGE_HOVER_CHORD) {
+        const { chord } = request.data as HoverChordData;
+        playChord(chord, transposition);
+      }
     };
 
     chrome.runtime.onMessage.addListener(handleMessage);
 
     return () => chrome.runtime.onMessage.removeListener(handleMessage);
-  }, []);
+  }, [transposition]);
 
   useEffect(() => {
     if (!artist || !song) {

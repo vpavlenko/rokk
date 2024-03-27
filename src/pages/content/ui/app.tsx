@@ -1,8 +1,27 @@
-import { MESSAGE_SONG_OPENED, MESSAGE_TRANSPOSED } from '@root/src/shared/messages';
+import { MESSAGE_HOVER_CHORD, MESSAGE_SONG_OPENED, MESSAGE_TRANSPOSED } from '@root/src/shared/messages';
 import chordStorage from '@root/src/shared/storages/chordStorage';
 import { useEffect } from 'react';
 
+const attachHoverHandlers = () => {
+  const elements = document.querySelectorAll('.podbor__chord');
+
+  const handleMouseEnter = (event: MouseEvent) => {
+    chrome.runtime.sendMessage({
+      action: MESSAGE_HOVER_CHORD,
+      data: {
+        chord: (event.target as HTMLDivElement).innerText,
+      },
+    });
+  };
+
+  elements.forEach(element => {
+    element.addEventListener('mouseenter', handleMouseEnter);
+  });
+};
+
 export default function App() {
+  useEffect(() => attachHoverHandlers(), []);
+
   useEffect(() => {
     const targetNode = document.querySelector('.b-podbor__text') as HTMLPreElement;
     if (targetNode) {
@@ -16,6 +35,8 @@ export default function App() {
             transposition: parseInt(document.getElementById('tone').innerText, 10) || 0,
           },
         });
+
+        attachHoverHandlers();
       };
 
       const observer = new MutationObserver(callback);

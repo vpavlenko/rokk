@@ -3,6 +3,7 @@
 
 export const MESSAGE_SONG_OPENED = 'songOpened';
 export const MESSAGE_TRANSPOSED = 'transposed';
+export const MESSAGE_HOVER_CHORD = 'hoverChord';
 
 export type SongOpenedData = {
   artist: string;
@@ -11,3 +12,5 @@ export type SongOpenedData = {
 };
 
 export type TransposedData = { chords: string[]; transposition: number };
+
+export type HoverChordData = { chord: string };

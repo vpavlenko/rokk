@@ -2,30 +2,53 @@ import * as Tone from 'tone';
 import GuitarAcousticMp3 from 'tonejs-instrument-guitar-acoustic-mp3';
 import guitarChords from './guitarChords';
 
-function parseChordSymbol(chordSymbol: string): [string, string] {
-  const root = chordSymbol[0]; // Assuming single-letter root notes for simplicity
-  let quality = chordSymbol.substring(1);
+const KEYS = guitarChords.keys;
 
-  if (quality === 'm') {
-    quality = 'minor';
-  } else if (quality === '7') {
-    quality = '7';
-  } else if (quality === '') {
-    quality = 'major';
+function parseChordSymbol(chordSymbol: string): [string, string] {
+  const enharmonics = {
+    Db: 'C#',
+    'D#': 'Eb',
+    Gb: 'F#',
+    'G#': 'Ab',
+    'A#': 'Bb',
+  };
+
+  let chord = chordSymbol;
+  if (enharmonics[chord.substring(0, 2)]) {
+    chord = `${enharmonics[chord.substring(0, 2)]}${chord.substring(2)}`;
   }
-  // Extend this logic to handle other chord types like 'm7', 'maj7', 'dim', etc.
+
+  const root = KEYS.indexOf(chord.substring(0, 2)) !== -1 ? chord.substring(0, 2) : chord[0];
+
+  if (!KEYS.includes(root)) {
+    throw new Error(`Invalid root note: ${root}`);
+  }
+
+  let quality = chordSymbol.substring(root.length);
+
+  switch (quality) {
+    case 'm':
+      quality = 'minor';
+      break;
+    case 'M7':
+      quality = 'maj7';
+      break;
+    case '':
+      quality = 'major';
+      break;
+  }
 
   return [root, quality];
 }
 
 function applyTransposition(root: string, transposition: number): string {
-  const rootIndex = guitarChords.keys.indexOf(root);
+  const rootIndex = KEYS.indexOf(root);
 
   if (rootIndex === -1) {
     throw new Error('Root note not found in KEYS array');
   }
 
-  return guitarChords.keys[(rootIndex + 12 - transposition) % 12];
+  return KEYS[(rootIndex + 12 - transposition) % 12];
 }
 
 function getChordMidiPitches(chordSymbol: string, transposition: number): number[] | undefined {
@@ -54,15 +77,13 @@ const guitar = new GuitarAcousticMp3({
   },
 });
 
-const playChord = (chordSymbol, transposition) => {
+export const playChord = (chordSymbol, transposition) => {
   const midiPitches = getChordMidiPitches(chordSymbol, transposition);
   if (midiPitches && instrument) {
-    // Clear the previous timeout to prevent it from stopping the current notes
     if (releaseTimeoutId) {
       clearTimeout(releaseTimeoutId);
     }
 
-    // Preemptively mute all currently playing notes
     currentlyPlayingFrequencies.forEach(frequency => {
       instrument.triggerRelease(frequency);
     });
@@ -71,22 +92,18 @@ const playChord = (chordSymbol, transposition) => {
     const strumDuration = 0.01;
     const frequencies = midiPitches.map(pitch => Tone.Midi(pitch).toFrequency());
 
-    // Update the currently playing notes
     currentlyPlayingFrequencies = frequencies;
 
-    // Triggering the attack of each note in sequence for the strumming effect
     frequencies.forEach((frequency, index) => {
       instrument.triggerAttack(frequency, startTime + index * strumDuration);
     });
 
-    // Schedule all notes to be stopped after the chordDuration, and clear the currently playing notes
     releaseTimeoutId = setTimeout(() => {
       frequencies.forEach(frequency => {
         instrument.triggerRelease(frequency);
       });
-      // Clear the currently playing notes after they are all released
       currentlyPlayingFrequencies = [];
-      releaseTimeoutId = null; // Reset the timeout ID
+      releaseTimeoutId = null;
     }, 1000);
   }
 };
