@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import '@pages/newtab/Newtab.css';
 import '@pages/newtab/Newtab.scss';
 import useStorage from '@src/shared/hooks/useStorage';
@@ -30,6 +30,11 @@ const cleanupChords = (chords: string[]): string[] =>
   chords.map(chord => normalizeChord(chord));
 
 const Newtab = () => {
+  const [showEverySong, setShowEverySong] = useState<boolean>(true);
+  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setShowEverySong(event.target.checked);
+  };
+
   const chords = useStorage(chordStorage);
   const chordsWithStats = useMemo(() => {
     return Object.fromEntries(
@@ -72,45 +77,58 @@ const Newtab = () => {
 
   return (
     <div>
+      <div>
+        <label>
+          Show Every Song
+          <input
+            type="checkbox"
+            checked={showEverySong}
+            onChange={handleCheckboxChange}
+          />
+        </label>
+      </div>
       {Object.entries(chordsWithStats).map(([artist, { songs, chordCounts }]) => (
         <div key={artist}>
           <h3>{artist}</h3>
-          <div>
+          <div style={{ marginBottom: 10 }}>
             {Object.entries(chordCounts)
               .sort((a, b) => b[1] - a[1])
               .map(([chord, count]) => (
                 <span key={chord}>
-                  {chord}: <b>{count}</b>&nbsp;&nbsp;&nbsp;&nbsp;
+                  {chord}: {count}{' '}
+                  {`(${((count / Object.keys(songs).length) * 100).toFixed(0)}%)`}
+                  &nbsp;&nbsp;&nbsp;&nbsp;
                 </span>
               ))}
           </div>
-          {Object.entries(songs).map(
-            ([song, { url, chords, cleanedChords, transposition, hasModulation }]) => (
-              <div key={song} style={{ marginBottom: 10 }}>
-                <a href={url}>{song}</a>: ({transposition}
-                {hasModulation && ', +mod'})
-                <div>
-                  <b>source_: </b>
-                  {chords.map(chord => (
-                    <>
-                      <span>{chord}</span>&nbsp;
-                    </>
-                  ))}
+          {showEverySong &&
+            Object.entries(songs).map(
+              ([song, { url, chords, cleanedChords, transposition, hasModulation }]) => (
+                <div key={song} style={{ marginBottom: 10 }}>
+                  <a href={url}>{song}</a>: ({transposition}
+                  {hasModulation && ', +mod'})
+                  <div>
+                    <b>source_: </b>
+                    {chords.map(chord => (
+                      <>
+                        <span>{chord}</span>&nbsp;
+                      </>
+                    ))}
+                  </div>
+                  <div>
+                    <b>cleaned:</b>{' '}
+                    {cleanedChords.map(chord => (
+                      <>
+                        <span style={{ cursor: 'pointer' }} onMouseEnter={hoverChord}>
+                          {chord}
+                        </span>
+                        &nbsp;
+                      </>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <b>cleaned:</b>{' '}
-                  {cleanedChords.map(chord => (
-                    <>
-                      <span style={{ cursor: 'pointer' }} onMouseEnter={hoverChord}>
-                        {chord}
-                      </span>
-                      &nbsp;
-                    </>
-                  ))}
-                </div>
-              </div>
-            ),
-          )}
+              ),
+            )}
         </div>
       ))}
     </div>
