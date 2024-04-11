@@ -27,7 +27,13 @@ const hoverChord = (event: React.MouseEvent) => {
 type Counter = { [key: string]: number };
 
 const cleanupChords = (chords: string[]): string[] =>
-  chords.map(chord => normalizeChord(chord));
+  chords
+    .map(chord => normalizeChord(chord))
+    .reduce(
+      (acc, chord) =>
+        acc.length === 0 || acc[acc.length - 1] !== chord ? [...acc, chord] : acc,
+      [],
+    );
 
 const Newtab = () => {
   const [showEverySong, setShowEverySong] = useState<boolean>(true);
