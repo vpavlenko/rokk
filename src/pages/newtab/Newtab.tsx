@@ -88,14 +88,17 @@ const Newtab = () => {
         </label>
       </div>
       {Object.entries(chordsWithStats).map(([artist, { songs, chordCounts }]) => (
-        <div key={artist}>
+        <div key={artist} style={{ marginTop: 40 }}>
           <h3>{artist}</h3>
           <div style={{ marginBottom: 10 }}>
             {Object.entries(chordCounts)
               .sort((a, b) => b[1] - a[1])
               .map(([chord, count]) => (
                 <span key={chord}>
-                  {chord}: {count}{' '}
+                  <span style={{ cursor: 'pointer' }} onMouseEnter={hoverChord}>
+                    {chord}
+                  </span>
+                  : {count}{' '}
                   {`(${((count / Object.keys(songs).length) * 100).toFixed(0)}%)`}
                   &nbsp;&nbsp;&nbsp;&nbsp;
                 </span>
