@@ -24,6 +24,8 @@ const hoverChord = (event: React.MouseEvent) => {
   }
 };
 
+type Counter = { [key: string]: number };
+
 const cleanupChords = (chords: string[]): string[] =>
   chords.map(chord => normalizeChord(chord));
 
@@ -31,31 +33,57 @@ const Newtab = () => {
   const chords = useStorage(chordStorage);
   const chordsWithStats = useMemo(() => {
     return Object.fromEntries(
-      Object.entries(chords).map(([artist, songs]) => [
-        artist,
-        Object.fromEntries(
+      Object.entries(chords).map(([artist, songs]) => {
+        const chordCounts: Counter = {};
+
+        const songsWithStats = Object.fromEntries(
           Object.entries(songs).map(
-            ([song, { url, chords, transposition, hasModulation }]) => [
-              song,
-              {
-                url,
-                chords,
-                cleanedChords: cleanupChords(chords),
-                transposition,
-                hasModulation,
-              },
-            ],
+            ([song, { url, chords, transposition, hasModulation }]) => {
+              const cleanedChords = cleanupChords(chords);
+
+              new Set(cleanedChords).forEach(chord => {
+                chordCounts[chord] = (chordCounts[chord] || 0) + 1;
+              });
+
+              return [
+                song,
+                {
+                  url,
+                  chords,
+                  cleanedChords,
+                  transposition,
+                  hasModulation,
+                },
+              ];
+            },
           ),
-        ),
-      ]),
+        );
+
+        return [
+          artist,
+          {
+            songs: songsWithStats,
+            chordCounts,
+          },
+        ];
+      }),
     );
   }, [chords]);
 
   return (
     <div>
-      {Object.entries(chordsWithStats).map(([artist, songs]) => (
+      {Object.entries(chordsWithStats).map(([artist, { songs, chordCounts }]) => (
         <div key={artist}>
           <h3>{artist}</h3>
+          <div>
+            {Object.entries(chordCounts)
+              .sort((a, b) => b[1] - a[1])
+              .map(([chord, count]) => (
+                <span key={chord}>
+                  {chord}: <b>{count}</b>&nbsp;&nbsp;&nbsp;&nbsp;
+                </span>
+              ))}
+          </div>
           {Object.entries(songs).map(
             ([song, { url, chords, cleanedChords, transposition, hasModulation }]) => (
               <div key={song} style={{ marginBottom: 10 }}>
