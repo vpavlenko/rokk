@@ -5,7 +5,7 @@ import { parseChord } from './parseChord';
 
 const KEYS = guitarChords.keys;
 
-const QUALITY_TO_PRINT = { major: '', minor: 'm', '7': '7' };
+const QUALITY_TO_PRINT = { major: '', minor: 'm', '7': '7', dim: 'dim', aug: 'aug' };
 
 function parseChordForPlayer(chordSymbol: string): [string, string] {
   const { root, bass, triadQuality, properties } = parseChord(chordSymbol);
@@ -30,6 +30,11 @@ function applyTransposition(root: string, transposition: number): string {
   return KEYS[(rootIndex + 12 - transposition) % 12];
 }
 
+export const normalizeChord = (chordSymbol: string): string => {
+  const [root, suffix] = parseChordForPlayer(chordSymbol);
+  return `${root}${QUALITY_TO_PRINT[suffix]}`;
+};
+
 function getChordMidiPitches(
   chordSymbol: string,
   transposition: number,
@@ -45,7 +50,7 @@ function getChordMidiPitches(
   );
 
   // Return the MIDI pitches for the first variation found, for simplicity
-  return [variations?.positions[0]?.midi, `${root}${QUALITY_TO_PRINT[suffix]}`];
+  return [variations?.positions[0]?.midi, normalizeChord(chordSymbol)];
 }
 
 let currentlyPlayingFrequencies: number[] = [];
