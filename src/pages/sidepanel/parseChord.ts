@@ -26,6 +26,7 @@ const PITCH: { [key: string]: PitchClass } = {
   a: 9,
   b: 11,
   С: 0,
+  H: 11,
 };
 
 const CHUNKS_TO_REPLACE = {
@@ -41,7 +42,9 @@ const CHUNKS_TO_REPLACE = {
 };
 
 const extractChunk = (chord: string, chunk: string): [string, boolean] => {
-  const regex = new RegExp(`\\(?${chunk.replace(/\+/g, '\\+').replace(/\*/g, '\\*')}\\)?`);
+  const regex = new RegExp(
+    `\\(?${chunk.replace(/\+/g, '\\+').replace(/\*/g, '\\*')}\\)?`,
+  );
 
   if (regex.test(chord)) {
     return [chord.replace(regex, ''), true];
@@ -136,7 +139,9 @@ export const parseChord = (chord: string): Chord | null => {
   let root: PitchClass | null = null;
   let triadQuality: TriadQuality = 'major';
 
-  for (const chunk of Object.keys(CHUNKS_TO_REPLACE) as (keyof typeof CHUNKS_TO_REPLACE)[]) {
+  for (const chunk of Object.keys(
+    CHUNKS_TO_REPLACE,
+  ) as (keyof typeof CHUNKS_TO_REPLACE)[]) {
     chord = chord.replace(chunk, CHUNKS_TO_REPLACE[chunk]);
   }
 

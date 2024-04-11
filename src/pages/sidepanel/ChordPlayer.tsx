@@ -5,6 +5,8 @@ import { parseChord } from './parseChord';
 
 const KEYS = guitarChords.keys;
 
+const QUALITY_TO_PRINT = { major: '', minor: 'm', '7': '7' };
+
 function parseChordForPlayer(chordSymbol: string): [string, string] {
   const { root, bass, triadQuality, properties } = parseChord(chordSymbol);
 
@@ -28,17 +30,22 @@ function applyTransposition(root: string, transposition: number): string {
   return KEYS[(rootIndex + 12 - transposition) % 12];
 }
 
-function getChordMidiPitches(chordSymbol: string, transposition: number): number[] | undefined {
+function getChordMidiPitches(
+  chordSymbol: string,
+  transposition: number,
+): [number[], string] | undefined {
   // Split the chord symbol into its components (e.g., 'Am' -> ['A', 'minor'])
   // eslint-disable-next-line prefer-const
   let [root, suffix] = parseChordForPlayer(chordSymbol);
   root = applyTransposition(root, transposition);
 
   // Find the chord variations for the given root and suffix
-  const variations = guitarChords.chords[root.replace('#', 'sharp')]?.find(variant => variant.suffix === suffix);
+  const variations = guitarChords.chords[root.replace('#', 'sharp')]?.find(
+    variant => variant.suffix === suffix,
+  );
 
   // Return the MIDI pitches for the first variation found, for simplicity
-  return variations?.positions[0]?.midi;
+  return [variations?.positions[0]?.midi, `${root}${QUALITY_TO_PRINT[suffix]}`];
 }
 
 let currentlyPlayingFrequencies: number[] = [];
@@ -54,9 +61,10 @@ const guitar = new GuitarAcousticMp3({
   },
 });
 
-export const playChord = (chordSymbol, transposition) => {
-  const midiPitches = getChordMidiPitches(chordSymbol, transposition);
+export const playChord = (chordSymbol, transposition, setPlayedChord) => {
+  const [midiPitches, chordPlayed] = getChordMidiPitches(chordSymbol, transposition);
   if (midiPitches && instrument) {
+    setPlayedChord(chordPlayed);
     if (releaseTimeoutId) {
       clearTimeout(releaseTimeoutId);
     }
@@ -85,22 +93,39 @@ export const playChord = (chordSymbol, transposition) => {
   }
 };
 
-export const PlayableChord: React.FC<{ chord: string; isEnabled: boolean; transposition: number }> = ({
-  chord,
-  isEnabled,
-  transposition,
-}) => (
-  <button style={{ backgroundColor: isEnabled ? '#dfd' : '#999' }} onClick={() => playChord(chord, transposition)}>
+const PlayableChord: React.FC<{
+  chord: string;
+  isEnabled: boolean;
+  transposition: number;
+  setPlayedChord: (string) => void;
+}> = ({ chord, isEnabled, transposition, setPlayedChord }) => (
+  <button
+    style={{ backgroundColor: isEnabled ? '#dfd' : '#999' }}
+    onClick={() => playChord(chord, transposition, setPlayedChord)}>
     {chord}
   </button>
 );
 
-export const CHORDS_TO_PLAY = ['Am', 'E', 'E7', 'Dm', 'F', 'G', 'C', 'Em', 'A7', 'B7', 'D', 'Gm'];
+export const CHORDS_TO_PLAY = [
+  'Am',
+  'E',
+  'E7',
+  'Dm',
+  'F',
+  'G',
+  'C',
+  'Em',
+  'A7',
+  'B7',
+  'D',
+  'Gm',
+];
 
-const ChordPlayer: React.FC<{ enabledChords: string[]; transposition: number }> = ({
-  enabledChords,
-  transposition,
-}) => (
+const ChordPlayer: React.FC<{
+  enabledChords: string[];
+  transposition: number;
+  setPlayedChord: (string) => void;
+}> = ({ enabledChords, transposition, setPlayedChord }) => (
   <div>
     {CHORDS_TO_PLAY.map((chord, index) => (
       <PlayableChord
@@ -108,6 +133,7 @@ const ChordPlayer: React.FC<{ enabledChords: string[]; transposition: number }> 
         chord={chord}
         isEnabled={enabledChords.indexOf(chord) !== -1}
         transposition={transposition}
+        setPlayedChord={setPlayedChord}
       />
     ))}
   </div>

@@ -4,7 +4,11 @@ import withSuspense from '@src/shared/hoc/withSuspense';
 import withErrorBoundary from '@src/shared/hoc/withErrorBoundary';
 import chordStorage from '@root/src/shared/storages/chordStorage';
 import SearchResultItem, { SearchResultItemProps } from './Youtube';
-import { MESSAGE_HOVER_CHORD, MESSAGE_PAGE_DATA, Message } from '@root/src/shared/messages';
+import {
+  MESSAGE_HOVER_CHORD,
+  MESSAGE_PAGE_DATA,
+  Message,
+} from '@root/src/shared/messages';
 import ChordPlayer, { CHORDS_TO_PLAY, playChord } from './ChordPlayer';
 import { processChords } from './chordProcessing';
 
@@ -34,6 +38,7 @@ const SidePanel = () => {
   const [savingResult, setSavingResult] = useState<string>('');
   const [processedChords, setProcessedChords] = useState<string[]>([]);
   const [hasModulation, setHasModulation] = useState<boolean>(false);
+  const [playedChord, setPlayedChord] = useState<string>('');
 
   useEffect(() => {
     const handleMessage = (request: Message, sender: chrome.runtime.MessageSender) => {
@@ -49,7 +54,7 @@ const SidePanel = () => {
       }
       if (request.action === MESSAGE_HOVER_CHORD) {
         const { chord } = request.data;
-        playChord(chord, transposition);
+        playChord(chord, transposition, setPlayedChord);
       }
     };
 
@@ -79,30 +84,40 @@ const SidePanel = () => {
   useEffect(() => setHasModulation(false), [song]);
 
   useEffect(() => {
-    const f = [...new Set(chords.filter(chord => CHORDS_TO_PLAY.indexOf(chord) === -1))].map(chord => (
-      <span key={chord}>{chord}</span>
-    ));
+    const f = [
+      ...new Set(chords.filter(chord => CHORDS_TO_PLAY.indexOf(chord) === -1)),
+    ].map(chord => <span key={chord}>{chord}</span>);
   }, [chords]);
 
   return (
     <div style={{ width: '100vw' }}>
       <div>
-        <ChordPlayer enabledChords={processedChords} transposition={transposition} />
+        <ChordPlayer
+          enabledChords={processedChords}
+          transposition={transposition}
+          setPlayedChord={setPlayedChord}
+        />
       </div>
       <div>
         other chords:{' '}
-        {[...new Set(chords.filter(chord => CHORDS_TO_PLAY.indexOf(chord) === -1))].map(chord => (
-          <span key={chord} style={{ marginRight: '0.5em' }}>
-            {chord}
-          </span>
-        ))}
+        {[...new Set(chords.filter(chord => CHORDS_TO_PLAY.indexOf(chord) === -1))].map(
+          chord => (
+            <span key={chord} style={{ marginRight: '0.5em' }}>
+              {chord}
+            </span>
+          ),
+        )}
       </div>
       <div>transposition: {transposition}</div>
+      <div>last played chord: {playedChord}</div>
       <div>
         <button onClick={() => setYoutubeVideo(null)}>Close</button>
       </div>
       <div>
-        <a href={`https://www.youtube.com/results?search_query=${artist} ${song}`} target="_blank" rel="noreferrer">
+        <a
+          href={`https://www.youtube.com/results?search_query=${artist} ${song}`}
+          target="_blank"
+          rel="noreferrer">
           Search Youtube
         </a>
       </div>
@@ -123,7 +138,12 @@ const SidePanel = () => {
             <button
               key={index}
               onClick={() => setYoutubeVideo(result.id.videoId)}
-              style={{ cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}>
+              style={{
+                cursor: 'pointer',
+                border: 'none',
+                background: 'none',
+                padding: 0,
+              }}>
               <SearchResultItem result={result} />
             </button>
           ))
@@ -134,7 +154,9 @@ const SidePanel = () => {
         <ul>
           {chordsBlock
             ?.split(/\n/g)
-            .map(line => [...line.matchAll(/data-chord="([^"]+)"/g)].map(match => match[1]))
+            .map(line =>
+              [...line.matchAll(/data-chord="([^"]+)"/g)].map(match => match[1]),
+            )
             .filter(chords => chords.length > 0)
             .map((chords, index) => <li key={index}>{chords.join(' ')}</li>)}
         </ul>
@@ -144,7 +166,9 @@ const SidePanel = () => {
           <input
             type="checkbox"
             checked={hasModulation}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setHasModulation(event.target.checked)}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+              setHasModulation(event.target.checked)
+            }
           />
           has modulation
         </label>
@@ -153,7 +177,14 @@ const SidePanel = () => {
         <button
           onClick={async () => {
             try {
-              await chordStorage.addChords(artist, song, url, chords, transposition, hasModulation);
+              await chordStorage.addChords(
+                artist,
+                song,
+                url,
+                chords,
+                transposition,
+                hasModulation,
+              );
               setSavingResult('saved');
               setTimeout(() => setSavingResult(''), 1000);
             } catch (e) {
@@ -187,4 +218,7 @@ const SidePanel = () => {
   );
 };
 
-export default withErrorBoundary(withSuspense(SidePanel, <div> Loading ... </div>), <div> Error Occur </div>);
+export default withErrorBoundary(
+  withSuspense(SidePanel, <div> Loading ... </div>),
+  <div> Error Occur </div>,
+);
