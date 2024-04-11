@@ -73,14 +73,14 @@ export default function App() {
       const observer = new MutationObserver(callback);
       observer.observe(targetNode, config);
 
-      return () => observer.disconnect();
+      // return () => observer.disconnect();
+      fetchTransposition();
+      attachHoverHandlers();
+      sendPageData();
     }
 
-    fetchTransposition();
-    attachHoverHandlers();
-    sendPageData();
     enhanceArtistPage();
   }, []);
 
-  return <div className="rokk_content_view">content view</div>;
+  return <div className="rokk_content_view"></div>;
 }

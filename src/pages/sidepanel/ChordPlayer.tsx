@@ -30,13 +30,15 @@ function parseChordSymbol(chordSymbol: string): [string, string] {
     case 'm':
       quality = 'minor';
       break;
-    case 'M7':
+    case 'maj':
       quality = 'maj7';
       break;
     case '':
       quality = 'major';
       break;
   }
+
+  quality = quality.replace('-', 'b');
 
   return [root, quality];
 }
@@ -118,7 +120,7 @@ export const PlayableChord: React.FC<{ chord: string; isEnabled: boolean; transp
   </button>
 );
 
-const CHORDS_TO_PLAY = ['Am', 'E', 'E7', 'Dm', 'F', 'G', 'C', 'A7', 'B7', 'D', 'Gm'];
+export const CHORDS_TO_PLAY = ['Am', 'E', 'E7', 'Dm', 'F', 'G', 'C', 'Em', 'A7', 'B7', 'D', 'Gm'];
 
 const ChordPlayer: React.FC<{ enabledChords: string[]; transposition: number }> = ({
   enabledChords,

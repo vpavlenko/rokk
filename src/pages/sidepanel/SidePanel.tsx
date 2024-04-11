@@ -5,7 +5,7 @@ import withErrorBoundary from '@src/shared/hoc/withErrorBoundary';
 import chordStorage from '@root/src/shared/storages/chordStorage';
 import SearchResultItem, { SearchResultItemProps } from './Youtube';
 import { MESSAGE_HOVER_CHORD, MESSAGE_PAGE_DATA, Message } from '@root/src/shared/messages';
-import ChordPlayer, { playChord } from './ChordPlayer';
+import ChordPlayer, { CHORDS_TO_PLAY, playChord } from './ChordPlayer';
 import { processChords } from './chordProcessing';
 
 const YOUTUBE_API_KEY = localStorage.getItem('YOUTUBE_API_KEY');
@@ -26,7 +26,7 @@ const SidePanel = () => {
   const [artist, setArtist] = useState<string | null>(null);
   const [song, setSong] = useState<string | null>(null);
   const [url, setUrl] = useState<string | null>(null);
-  const [chordsBlock, setChordsBlock] = useState<string>('');
+  const [chordsBlock, setChordsBlock] = useState<string | null>('');
   const [youtubeVideo, setYoutubeVideo] = useState<string | null>(null);
   const [transposition, setTransposition] = useState<number>(0);
   const [searchResults, setSearchResults] = useState<SearchResultItemProps[] | null>([]);
@@ -78,10 +78,24 @@ const SidePanel = () => {
 
   useEffect(() => setHasModulation(false), [song]);
 
+  useEffect(() => {
+    const f = [...new Set(chords.filter(chord => CHORDS_TO_PLAY.indexOf(chord) === -1))].map(chord => (
+      <span key={chord}>{chord}</span>
+    ));
+  }, [chords]);
+
   return (
     <div style={{ width: '100vw' }}>
       <div>
         <ChordPlayer enabledChords={processedChords} transposition={transposition} />
+      </div>
+      <div>
+        other chords:{' '}
+        {[...new Set(chords.filter(chord => CHORDS_TO_PLAY.indexOf(chord) === -1))].map(chord => (
+          <span key={chord} style={{ marginRight: '0.5em' }}>
+            {chord}
+          </span>
+        ))}
       </div>
       <div>transposition: {transposition}</div>
       <div>
@@ -119,12 +133,10 @@ const SidePanel = () => {
         innerHTML:{' '}
         <ul>
           {chordsBlock
-            .split(/\n/g)
+            ?.split(/\n/g)
             .map(line => [...line.matchAll(/data-chord="([^"]+)"/g)].map(match => match[1]))
             .filter(chords => chords.length > 0)
-            .map((chords, index) => (
-              <li key={index}>{chords.join(' ')}</li>
-            ))}
+            .map((chords, index) => <li key={index}>{chords.join(' ')}</li>)}
         </ul>
       </div>
       <div>
