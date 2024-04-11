@@ -45,7 +45,11 @@ const SidePanel = () => {
     if (chordsBlock) {
       const lines = chordsBlock
         .split(/\n/g)
-        .map(line => [...line.matchAll(/data-chord="([^"]+)"/g)].map(match => match[1]))
+        .map(line =>
+          [...line.matchAll(/podbor__chord" data-chord="([^"]+)"/g)].map(
+            match => match[1],
+          ),
+        )
         .filter(chords => chords.length > 0)
         .map(chords => chords.join(' '))
         .join('\n');
