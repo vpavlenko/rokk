@@ -118,6 +118,7 @@ const CHUNKS: string[] = [
   '4', // sus4
   'b9',
   '-9', // sometimes G-9 implies 7
+  '9-',
   '+9',
   '*',
   '/#9', // are these the bass?
@@ -178,13 +179,7 @@ export const parseChord = (chord: string): Chord | null => {
   // chord = chord.replace("m#", "#m");
 
   if (
-    chord === 'min7b5' ||
-    chord === 'm7b5' ||
-    chord === 'm7-5' ||
     chord === '7-5' ||
-    chord === 'm5-' ||
-    chord === 'm-5' ||
-    chord === 'm75-' ||
     chord === '5-' ||
     chord === 'maj7b5' ||
     chord === 'M7b5' ||
@@ -197,8 +192,18 @@ export const parseChord = (chord: string): Chord | null => {
     chord === '°' ||
     chord === 'º'
   ) {
-    // I don't distinguish dim7 and m7b5 as I don't care about types of seventh chords for now
+    // TODO: distinguish Maj7b5
     triadQuality = 'dim';
+  } else if (
+    chord === 'm7b5' ||
+    chord === 'm7-5' ||
+    chord === 'm5-' ||
+    chord === 'm-5' ||
+    chord === 'm75-' ||
+    chord === 'min7b5'
+  ) {
+    triadQuality = 'dim';
+    properties.push('7');
   } else if (chord === 'm' || chord === 'M' || chord === 'min' || chord === 'mi') {
     triadQuality = 'minor';
   } else if (chord === 'm7+' || chord === 'm#7') {

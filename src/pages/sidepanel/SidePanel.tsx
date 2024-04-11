@@ -123,7 +123,9 @@ const SidePanel = () => {
         other chords:{' '}
         {[...new Set(chords.filter(chord => CHORDS_TO_PLAY.indexOf(chord) === -1))].map(
           chord => (
-            <span key={chord} style={{ marginRight: '0.5em' }}>
+            <span
+              key={chord}
+              style={{ marginRight: '0.5em', fontWeight: 700, color: 'red' }}>
               {chord}
             </span>
           ),
@@ -178,6 +180,7 @@ const SidePanel = () => {
           style={{ width: '100%' }}
         />
       </div>
+      <div>{textAreaValue}</div>
       <div>
         <label>
           <input

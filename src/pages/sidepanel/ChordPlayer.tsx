@@ -5,16 +5,28 @@ import { parseChord } from './parseChord';
 
 const KEYS = guitarChords.keys;
 
-const QUALITY_TO_PRINT = { major: '', minor: 'm', '7': '7', dim: 'dim', aug: 'aug' };
+const QUALITY_TO_PRINT = {
+  major: '',
+  minor: 'm',
+  '7': '7',
+  dim7: 'dim7',
+  aug: 'aug',
+  m7b5: 'm7b5',
+};
 
 function parseChordForPlayer(chordSymbol: string): [string, string] {
   const { root, bass, triadQuality, properties } = parseChord(chordSymbol);
-
   // {"root":7,"bass":2,"triadQuality":"major","properties":["7"]}
 
   let quality: string = triadQuality;
   if (triadQuality === 'major' && properties.includes('7')) {
     quality = '7';
+  } else if (triadQuality === 'dim') {
+    if (properties.includes('7')) {
+      quality = 'm7b5';
+    } else {
+      quality = 'dim7';
+    }
   }
 
   return [KEYS[root], quality];
