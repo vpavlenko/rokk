@@ -65,11 +65,11 @@ const SidePanel = () => {
     }
     const query = `${artist} ${song}`;
     const search = async () => {
-      const response = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=3&q=${encodeURIComponent(query)}&key=${YOUTUBE_API_KEY}`,
-      );
-      const data = await response.json();
-      setSearchResults(data.items);
+      // const response = await fetch(
+      //   `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=3&q=${encodeURIComponent(query)}&key=${YOUTUBE_API_KEY}`,
+      // );
+      // const data = await response.json();
+      // setSearchResults(data.items);
     };
     search();
   }, [artist, song]);

@@ -1,46 +1,21 @@
 import * as Tone from 'tone';
 import GuitarAcousticMp3 from 'tonejs-instrument-guitar-acoustic-mp3';
 import guitarChords from './guitarChords';
+import { parseChord } from './parseChord';
 
 const KEYS = guitarChords.keys;
 
-function parseChordSymbol(chordSymbol: string): [string, string] {
-  const enharmonics = {
-    Db: 'C#',
-    'D#': 'Eb',
-    Gb: 'F#',
-    'G#': 'Ab',
-    'A#': 'Bb',
-  };
+function parseChordForPlayer(chordSymbol: string): [string, string] {
+  const { root, bass, triadQuality, properties } = parseChord(chordSymbol);
 
-  let chord = chordSymbol;
-  if (enharmonics[chord.substring(0, 2)]) {
-    chord = `${enharmonics[chord.substring(0, 2)]}${chord.substring(2)}`;
+  // {"root":7,"bass":2,"triadQuality":"major","properties":["7"]}
+
+  let quality: string = triadQuality;
+  if (triadQuality === 'major' && properties.includes('7')) {
+    quality = '7';
   }
 
-  const root = KEYS.indexOf(chord.substring(0, 2)) !== -1 ? chord.substring(0, 2) : chord[0];
-
-  if (!KEYS.includes(root)) {
-    throw new Error(`Invalid root note: ${root}`);
-  }
-
-  let quality = chordSymbol.substring(root.length);
-
-  switch (quality) {
-    case 'm':
-      quality = 'minor';
-      break;
-    case 'maj':
-      quality = 'maj7';
-      break;
-    case '':
-      quality = 'major';
-      break;
-  }
-
-  quality = quality.replace('-', 'b');
-
-  return [root, quality];
+  return [KEYS[root], quality];
 }
 
 function applyTransposition(root: string, transposition: number): string {
@@ -56,7 +31,7 @@ function applyTransposition(root: string, transposition: number): string {
 function getChordMidiPitches(chordSymbol: string, transposition: number): number[] | undefined {
   // Split the chord symbol into its components (e.g., 'Am' -> ['A', 'minor'])
   // eslint-disable-next-line prefer-const
-  let [root, suffix] = parseChordSymbol(chordSymbol);
+  let [root, suffix] = parseChordForPlayer(chordSymbol);
   root = applyTransposition(root, transposition);
 
   // Find the chord variations for the given root and suffix
