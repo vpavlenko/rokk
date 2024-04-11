@@ -39,6 +39,23 @@ const SidePanel = () => {
   const [processedChords, setProcessedChords] = useState<string[]>([]);
   const [hasModulation, setHasModulation] = useState<boolean>(false);
   const [playedChord, setPlayedChord] = useState<string>('');
+  const [textAreaValue, setTextAreaValue] = useState('');
+
+  useEffect(() => {
+    if (chordsBlock) {
+      const lines = chordsBlock
+        .split(/\n/g)
+        .map(line => [...line.matchAll(/data-chord="([^"]+)"/g)].map(match => match[1]))
+        .filter(chords => chords.length > 0)
+        .map(chords => chords.join(' '))
+        .join('\n');
+      setTextAreaValue(lines);
+    }
+  }, [chordsBlock]);
+
+  const handleTextareaChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setTextAreaValue(event.target.value);
+  };
 
   useEffect(() => {
     const handleMessage = (request: Message, sender: chrome.runtime.MessageSender) => {
@@ -150,16 +167,12 @@ const SidePanel = () => {
         )}
       </div>
       <div>
-        innerHTML:{' '}
-        <ul>
-          {chordsBlock
-            ?.split(/\n/g)
-            .map(line =>
-              [...line.matchAll(/data-chord="([^"]+)"/g)].map(match => match[1]),
-            )
-            .filter(chords => chords.length > 0)
-            .map((chords, index) => <li key={index}>{chords.join(' ')}</li>)}
-        </ul>
+        <textarea
+          value={textAreaValue}
+          onChange={handleTextareaChange}
+          rows={textAreaValue.split('\n').length || 1}
+          style={{ width: '100%' }}
+        />
       </div>
       <div>
         <label>
@@ -181,7 +194,7 @@ const SidePanel = () => {
                 artist,
                 song,
                 url,
-                chords,
+                textAreaValue.trim().split(/\s+/),
                 transposition,
                 hasModulation,
               );
