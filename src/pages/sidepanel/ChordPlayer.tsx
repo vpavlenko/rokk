@@ -154,4 +154,7 @@ const ChordPlayer: React.FC<{
   </div>
 );
 
+export const isPrimaryChord = (chord: string) =>
+  CHORDS_TO_PLAY.includes(normalizeChord(chord));
+
 export default ChordPlayer;

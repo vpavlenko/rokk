@@ -6,6 +6,7 @@ import {
 } from '@root/src/shared/messages';
 import chordStorage from '@root/src/shared/storages/chordStorage';
 import { useEffect } from 'react';
+import { isPrimaryChord } from '../../sidepanel/ChordPlayer';
 
 const hoverChord = (event: MouseEvent) => {
   if (!event.shiftKey) {
@@ -23,6 +24,16 @@ const attachHoverHandlers = () => {
 
   elements.forEach(element => {
     element.addEventListener('mouseenter', hoverChord);
+  });
+};
+
+const highlightUnusualChords = () => {
+  const elements = document.querySelectorAll('.podbor__chord');
+
+  elements.forEach((element: HTMLDivElement) => {
+    if (!isPrimaryChord(element.getAttribute('data-chord'))) {
+      element.style.border = '1px solid red';
+    }
   });
 };
 
@@ -76,18 +87,17 @@ export default function App() {
     if (targetNode) {
       const config = { childList: true, subtree: true, characterData: true };
 
-      const callback = () => {
-        sendPageData();
+      const handleTransposition = () => {
         attachHoverHandlers();
+        highlightUnusualChords();
+        sendPageData();
       };
 
-      const observer = new MutationObserver(callback);
+      const observer = new MutationObserver(handleTransposition);
       observer.observe(targetNode, config);
 
-      // return () => observer.disconnect();
       fetchTransposition();
-      attachHoverHandlers();
-      sendPageData();
+      handleTransposition();
     }
 
     enhanceArtistPage();
