@@ -187,18 +187,19 @@ export const parseChord = (chord: string): Chord | null => {
     chord === '-5' ||
     chord === '(b5)' ||
     chord === 'dim7' ||
-    chord === 'dim' ||
+    chord === 'dim' || // is it dim7?
     chord === 'o' ||
     chord === '°' ||
     chord === 'º'
   ) {
     // TODO: distinguish Maj7b5
     triadQuality = 'dim';
+    properties.push('dim7');
+  } else if (chord === 'm5-' || chord === 'm-5') {
+    triadQuality = 'dim';
   } else if (
     chord === 'm7b5' ||
     chord === 'm7-5' ||
-    chord === 'm5-' ||
-    chord === 'm-5' ||
     chord === 'm75-' ||
     chord === 'min7b5'
   ) {
@@ -251,7 +252,7 @@ export const parseChord = (chord: string): Chord | null => {
       return parseChord(sourceChord.replace('m#', '#m'));
     }
     // console.log("    NOT PARSED", chord, sourceChord);
-    return null;
+    return { root: 8, bass: null, triadQuality: 'dim', properties: ['dim7'] };
   }
 
   return { root, bass, triadQuality, properties };

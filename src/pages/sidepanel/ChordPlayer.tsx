@@ -8,10 +8,6 @@ const KEYS = guitarChords.keys;
 const QUALITY_TO_PRINT = {
   major: '',
   minor: 'm',
-  '7': '7',
-  dim7: 'dim7',
-  aug: 'aug',
-  m7b5: 'm7b5',
 };
 
 function parseChordForPlayer(chordSymbol: string): [string, string] {
@@ -24,8 +20,10 @@ function parseChordForPlayer(chordSymbol: string): [string, string] {
   } else if (triadQuality === 'dim') {
     if (properties.includes('7')) {
       quality = 'm7b5';
-    } else {
+    } else if (properties.includes('dim7')) {
       quality = 'dim7';
+    } else {
+      quality = 'dim';
     }
   }
 
@@ -44,7 +42,7 @@ function applyTransposition(root: string, transposition: number): string {
 
 export const normalizeChord = (chordSymbol: string): string => {
   const [root, suffix] = parseChordForPlayer(chordSymbol);
-  return `${root}${QUALITY_TO_PRINT[suffix]}`;
+  return `${root}${QUALITY_TO_PRINT[suffix] ?? suffix}`;
 };
 
 function getChordMidiPitches(
