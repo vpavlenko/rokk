@@ -13,18 +13,7 @@ import ChordPlayer, { CHORDS_TO_PLAY, playChord } from './ChordPlayer';
 import { processChords } from './chordProcessing';
 
 const YOUTUBE_API_KEY = localStorage.getItem('YOUTUBE_API_KEY');
-
-// const ChordSequence: React.FC<{ chords: string[] }> = ({ chords }) => (
-//   <div>
-//     {chords.map((chord, index) => (
-//       <>
-//         <div key={index} style={{ marginRight: 20, display: 'inline-block' }}>
-//           {chord}
-//         </div>
-//       </>
-//     ))}
-//   </div>
-// );
+const PLAYBACK_TRANSPOSITIONS = [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6];
 
 const SidePanel = () => {
   const [artist, setArtist] = useState<string | null>(null);
@@ -40,6 +29,7 @@ const SidePanel = () => {
   const [hasModulation, setHasModulation] = useState<boolean>(false);
   const [playedChord, setPlayedChord] = useState<string>('');
   const [textAreaValue, setTextAreaValue] = useState('');
+  const [playbackTransposition, setPlaybackTransposition] = useState(0);
 
   useEffect(() => {
     if (chordsBlock) {
@@ -56,6 +46,8 @@ const SidePanel = () => {
       setTextAreaValue(lines);
     }
   }, [chordsBlock]);
+
+  useEffect(() => setPlaybackTransposition(0), [song]);
 
   const handleTextareaChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setTextAreaValue(event.target.value);
@@ -75,14 +67,14 @@ const SidePanel = () => {
       }
       if (request.action === MESSAGE_HOVER_CHORD) {
         const { chord } = request.data;
-        playChord(chord, transposition, setPlayedChord);
+        playChord(chord, transposition - playbackTransposition, setPlayedChord);
       }
     };
 
     chrome.runtime.onMessage.addListener(handleMessage);
 
     return () => chrome.runtime.onMessage.removeListener(handleMessage);
-  }, [transposition]);
+  }, [transposition, playbackTransposition]);
 
   useEffect(() => {
     setYoutubeVideo(null);
@@ -115,7 +107,7 @@ const SidePanel = () => {
       <div>
         <ChordPlayer
           enabledChords={processedChords}
-          transposition={transposition}
+          transposition={transposition - playbackTransposition}
           setPlayedChord={setPlayedChord}
         />
       </div>
@@ -132,6 +124,27 @@ const SidePanel = () => {
         )}
       </div>
       <div>transposition: {transposition}</div>
+      <div>
+        playback:{' '}
+        {PLAYBACK_TRANSPOSITIONS.map(diff => (
+          <>
+            <button
+              key={diff}
+              style={{
+                cursor: 'pointer',
+                color: playbackTransposition === diff ? 'black' : 'grey',
+                border: 'none',
+                backgroundColor: 'white',
+              }}
+              onClick={() => {
+                setPlaybackTransposition(diff);
+                playChord('Am', transposition - diff, setPlayedChord);
+              }}>
+              {diff}
+            </button>
+          </>
+        ))}
+      </div>
       <div>last played chord: {playedChord}</div>
       <div>
         <button onClick={() => setYoutubeVideo(null)}>Close</button>
@@ -216,24 +229,12 @@ const SidePanel = () => {
         </button>{' '}
         {savingResult}
       </div>
-      {/* <ChordSequence chords={chords} />
-      <div style={{ margin: '20px 0' }}>
-        Processing steps:
-        <ul>
-          {PROCESSING_STEPS.map(({ name }) => (
-            <li key={name}>{name}</li>
-          ))}
-        </ul>
-      </div>
-      <ChordSequence chords={processedChords} /> */}
       <div>
         <h3>
           {artist} - {song}
         </h3>
         {url}
       </div>
-
-      {/* <div style={{ marginTop: 30 }}>storage: {JSON.stringify(chordsDB)}</div> */}
     </div>
   );
 };
